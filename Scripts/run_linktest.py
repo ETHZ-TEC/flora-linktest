@@ -166,7 +166,7 @@ def create_test():
 
     # read info from config/header files
     custom = dict()
-    for var in ['FLOCKLAB']:
+    for var in ['FLOCKLAB', 'FLOCKLAB_SWD', 'SWO_ENABLE']:
         custom[var] = readConfig(var)
     custom['HOST_ID'] = readConfig('HOST_ID', idx=0) # assumption: first occurrence corresponds to BASEBOARD config, second occurrence to FLOCKLAB
     custom['git_hashes'] = {
@@ -225,7 +225,7 @@ def create_test():
         pinList = pinList.difference(set(['INT2', 'LED3']))
     if custom['SWO_ENABLE']:
         pinList = pinList.difference(set(['LED2']))
-    gpioTracingConf.pinList = sorted(list(pinList))
+    gpioTracingConf.pinList = ['INT1', 'INT2', 'LED1', 'LED2', 'LED3']
     fc.configList.append(gpioTracingConf)
 
     gpioActuation = GpioActuationConf()
