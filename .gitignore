@@ -1,0 +1,32 @@
+## STM32Cube
+Drivers/
+Middlewares/
+Debug/
+.settings/
+*.pyc
+*.tar.gz
+*.html
+# don't commit files which contain absolute (user dependent) paths
+.mxproject
+# compiler artifacts
+*.elf
+*.exe
+*.bin
+*.hex
+*.o
+
+## custom
+*.xml
+*.tar.gz
+*.pkl
+*.html
+data/
+__pycache__/
+
+## Misc
+*.log
+*_org
+
+## temp files
+*.scratch
+MXTmpFiles/
