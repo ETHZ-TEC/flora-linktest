@@ -64,8 +64,9 @@ testNoList = [
     # 2771, # FSK250
     # 2775, # FSK250
     # 2779, # SF7, enable crc_error and header_error interrupts
-    2780, # FSK250
+    # 2780, # FSK250
     # 2785, # FSK250
+    2808, #SF5, -9dBm
 ]
 
 
@@ -226,7 +227,9 @@ for testNo in testNoList:
 
 
     # save obtained data to file (including nodeList to resolve idx <-> node ID relations)
-    with open('linktest_data_{}.pkl'.format(testNo), 'wb' ) as f:
+    pklPath = './data/linktest_data_{}.pkl'.format(testNo)
+    os.makedirs(os.path.split(pklPath)[0], exist_ok=True)
+    with open(pklPath, 'wb' ) as f:
         d = {
             'testConfig': testConfig,
             'radioConfig': radioConfig,
@@ -314,7 +317,9 @@ for testNo in testNoList:
     )
     crc_error_html = crcErrorMatrixDf_styled.render()
 
-    with open("{}.html".format(testNo),"w") as fp:
+    htmlPath = './data/{}.html'.format(testNo)
+    os.makedirs(os.path.split(htmlPath)[0], exist_ok=True)
+    with open(htmlPath,"w") as fp:
        fp.write(html_template.format(
                pathloss_html=pathloss_html,
                prr_html=prr_html,

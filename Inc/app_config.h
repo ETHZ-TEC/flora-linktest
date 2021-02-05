@@ -27,16 +27,14 @@
 
 
 /* Link test configuration ****************************************************/
-
-#define TESTCONFIG_NUM_NODES            4
-#define TESTCONFIG_NODE_IDS             1, 2, 3, 4  //, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
-#define TESTCONFIG_NUM_TX               100
+#define TESTCONFIG_NUM_NODES            30
+#define TESTCONFIG_NODE_IDS             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+#define TESTCONFIG_NUM_TX               20
 #define TESTCONFIG_SETUP_TIME           500          // SetupTime [ms]
 #define TESTCONFIG_START_DELAY          1000         // StartDelay [ms]
 #define TESTCONFIG_STOP_DELAY           1000         // StopDelay [ms]
 #define TESTCONFIG_TX_SLACK             100          // TxSlack [ms]
 #define TESTCONFIG_KEY                  "deadbeef"   // payload of RF packets (must not contain escaped chars!)
-// TESTCONFIG_NODE_LIST is defined in task_linktest.c for practical reasons
 
 // /* mod5 (SF7) */
 // #define RADIOCONFIG_TX_POWER            0            // transmit power [dBm] (valid range: -9...+22)

@@ -12,7 +12,7 @@ import os
 import datetime
 import sys
 import json
-import git
+import git  # GitPython package
 
 from flocklab import Flocklab
 from flocklab import *
@@ -168,7 +168,7 @@ def create_test():
     custom = dict()
     for var in ['FLOCKLAB', 'FLOCKLAB_SWD', 'SWO_ENABLE']:
         custom[var] = readConfig(var)
-    custom['HOST_ID'] = readConfig('HOST_ID', idx=0) # assumption: first occurrence corresponds to BASEBOARD config, second occurrence to FLOCKLAB
+    custom['HOST_ID'] = readConfig('HOST_ID')
     custom['git_hashes'] = {
         'comboard_linktest': git.Repo('../.').head.object.hexsha,
         'flora-lib': git.Repo('../Lib').head.object.hexsha,
