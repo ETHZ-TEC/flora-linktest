@@ -26,9 +26,12 @@ from sx1262.sx1262 import LoraConfig, FskConfig
 obsNormal = []   # will be read from config if empty  # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
 obsHg     = []   # [15, 17, 25, 30]
 
+cwd = os.path.dirname(os.path.realpath(__file__))
+xmlPath = os.path.join(cwd, 'flocklab_linktest.xml')
+print(xmlPath)
 imageNormalId = 'imageNormal'
 imageHgId = 'imageHg'
-imagePath = '../Debug/comboard_linktest.elf'
+imagePath = os.path.join(cwd, '../Debug/comboard_linktest.elf')
 obsList = obsNormal + obsHg
 
 ###############################################################################
@@ -37,9 +40,6 @@ obsList = obsNormal + obsHg
 FREERTOS_STARTUP = 1.3
 SYNC_DELAY       = 10.0
 SLACK            = 10.0
-cwd = os.path.dirname(os.path.realpath(__file__))
-xmlPath = os.path.join(cwd, 'flocklab_linktest.xml')
-print(xmlPath)
 
 ################################################################################
 
@@ -170,9 +170,9 @@ def create_test():
         custom[var] = readConfig(var)
     custom['HOST_ID'] = readConfig('HOST_ID')
     custom['git_hashes'] = {
-        'comboard_linktest': git.Repo('../.').head.object.hexsha,
-        'flora-lib': git.Repo('../Lib').head.object.hexsha,
-        'dpp': git.Repo('../Lib/dpp').head.object.hexsha,
+        'comboard_linktest': git.Repo(os.path.join(cwd, '../.')).head.object.hexsha,
+        'flora-lib': git.Repo(os.path.join(cwd, '../Lib')).head.object.hexsha,
+        'dpp': git.Repo(os.path.join(cwd, '../Lib/dpp')).head.object.hexsha,
     }
     custom['image_last_modified'] = '{}LT'.format(datetime.datetime.fromtimestamp(os.path.getmtime(imagePath)))
 

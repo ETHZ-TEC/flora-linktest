@@ -11,6 +11,5 @@ Point-to-point link test for running on FlockLab 2 (measures packet reception ra
    (requires the  [`flocklab-tools`](https://pypi.org/project/flocklab-tools/) and `GitPython` python package)
 
 ## Evaluation of a Test
-1. Add path to FlockLab 2 result directory to eval script (`./Scripts/eval_linktest.py`)
-2. Run eval script: `./Scripts/eval_linktest.py`  
-   (Results are available as generated `.html` and `.pkl` files in `./Scripts/data/`.)
+1. Run eval script: `./Scripts/eval_linktest.py [testno]`  
+   (Results are available as generated `.html` and `.pkl` files in `./data/`.)

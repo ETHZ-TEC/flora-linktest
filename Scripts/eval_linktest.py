@@ -22,52 +22,14 @@ fl = Flocklab()
 
 assertionOverride = False
 
+
 ################################################################################
 
-#testdir = './75105'
-#assertionOverride = False
-
-#testdir = './75106'
-#assertionOverride = False
-
-#testdir = './75107'
-#assertionOverride = False
-
-# testdir = './75108'
-# assertionOverride = False
-#
-# testdir = '/home/rtrueb/tmp/78033/'
-# assertionOverride =
-
-# low-gain antenna only (for remote stations)
-pathTemp = '/home/rtrueb/polybox/PhD/Projects/FlockLab2/flocklab_tests/{}'
-
-# # old topology
-# testNoList = [
-#     #1167, # SF7 wo RxBoosted
-#     #1170, # FSK 125kHz still buggy
-#     #1172, # SF7 w RxBoosted
-#     #1175, # FSK 125kHz worked (with workaround), numTx=3
-
-#     1182, # SF7 numTx=10
-#     1184, # SF12 numTx=10
-#     1185, # SF5 numTx=10
-#     1186, # FSK 250kHz numTx=10
-#     1187, # FSK 125kHz numTx=10
-# ]
-
-# new topology
-testNoList = [
-    # 2547, # SF5, w/o obs30
-    # 2548, # SF5
-    # 2633, # SF7
-    # 2771, # FSK250
-    # 2775, # FSK250
-    # 2779, # SF7, enable crc_error and header_error interrupts
-    # 2780, # FSK250
-    # 2785, # FSK250
-    2808, #SF5, -9dBm
-]
+# check arguments
+if len(sys.argv) < 2:
+    print("no test number specified!")
+    sys.exit(1)
+testNoList = map(int, sys.argv[1:])
 
 
 ################################################################################
@@ -110,7 +72,11 @@ def getRows(roundNo, gDf):
 
 for testNo in testNoList:
     print('testNo: {}'.format(testNo))
-    testdir = pathTemp.format(testNo)
+    testdir = os.getcwd() + "/{}/serial.csv".format(testNo)
+
+    # download test results if directory does not exist
+    if not os.path.isfile(testdir):
+        fl.getResults(testNo)
 
     df = fl.serial2Df(testdir, error='ignore')
     df.sort_values(by=['timestamp', 'observer_id'], inplace=True, ignore_index=True)
