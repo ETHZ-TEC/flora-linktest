@@ -18,6 +18,7 @@
 #define SWO_ENABLE                      0
 #define CLI_ENABLE                      0
 #define LOG_USE_COLORS                  0
+#define LOG_ADD_TIMESTAMP               0
 #define LOG_PRINT_IMMEDIATELY           1
 #define LOG_LEVEL                       LOG_LEVEL_VERBOSE
 #define LOG_USE_DMA                     1      // use DMA (FIFO) for serial output
@@ -34,73 +35,73 @@
 #define TESTCONFIG_START_DELAY          1000         // StartDelay [ms]
 #define TESTCONFIG_STOP_DELAY           1000         // StopDelay [ms]
 #define TESTCONFIG_TX_SLACK             100          // TxSlack [ms]
-#define TESTCONFIG_KEY                  "deadbeef"   // payload of RF packets (must not contain escaped chars!)
+#define TESTCONFIG_KEY                  "deadbeef"   // payload of RF packets (no special characters!)
 
 // /* mod5 (SF7) */
-// #define RADIOCONFIG_TX_POWER            0            // transmit power [dBm] (valid range: -9...+22)
-// #define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
-// #define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
-// #define RADIOCONFIG_DATARATE            7            // datarate (FSK: bits/s, LoRa: spreading-factor)
-// #define RADIOCONFIG_BANDWIDTH           0            // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
-// #define RADIOCONFIG_CODERATE            1
-// #define RADIOCONFIG_PREAMBLE_LEN        10           // preamble length (LoRa: num symbols, FSK: num bytes)
-// #define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
-// #define RADIOCONFIG_CRC_ON              1            // CRC enabled
+//#define RADIOCONFIG_TX_POWER            0            // transmit power [dBm] (valid range: -9...+22)
+//#define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
+//#define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
+//#define RADIOCONFIG_DATARATE            7            // datarate (FSK: bits/s, LoRa: spreading-factor)
+//#define RADIOCONFIG_BANDWIDTH           0            // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
+//#define RADIOCONFIG_CODERATE            1
+//#define RADIOCONFIG_PREAMBLE_LEN        10           // preamble length (LoRa: num symbols, FSK: num bytes)
+//#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
+//#define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
 /* mod7 (SF5) */
-#define RADIOCONFIG_TX_POWER            -9           // transmit power [dBm] (valid range: -9...+22)
-#define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
-#define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
-#define RADIOCONFIG_DATARATE            5            // datarate (FSK: bits/s, LoRa: spreading-factor)
-#define RADIOCONFIG_BANDWIDTH           0            // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
-#define RADIOCONFIG_CODERATE            1
-#define RADIOCONFIG_PREAMBLE_LEN        12           // preamble length (LoRa: num symbols, FSK: num bytes)
-#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
-#define RADIOCONFIG_CRC_ON              1            // CRC enabled
+//#define RADIOCONFIG_TX_POWER            -9           // transmit power [dBm] (valid range: -9...+22)
+//#define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
+//#define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
+//#define RADIOCONFIG_DATARATE            5            // datarate (FSK: bits/s, LoRa: spreading-factor)
+//#define RADIOCONFIG_BANDWIDTH           0            // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
+//#define RADIOCONFIG_CODERATE            1
+//#define RADIOCONFIG_PREAMBLE_LEN        12           // preamble length (LoRa: num symbols, FSK: num bytes)
+//#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
+//#define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
 /* mod0 (SF12) */
-// #define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
-// #define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
-// #define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
-// #define RADIOCONFIG_DATARATE            12           // datarate (FSK: bits/s, LoRa: spreading-factor)
-// #define RADIOCONFIG_BANDWIDTH           0            // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
-// #define RADIOCONFIG_CODERATE            1
-// #define RADIOCONFIG_PREAMBLE_LEN        10           // preamble length (LoRa: num symbols, FSK: num bytes)
-// #define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
-// #define RADIOCONFIG_CRC_ON              1            // CRC enabled
+//#define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
+//#define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
+//#define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
+//#define RADIOCONFIG_DATARATE            12           // datarate (FSK: bits/s, LoRa: spreading-factor)
+//#define RADIOCONFIG_BANDWIDTH           0            // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
+//#define RADIOCONFIG_CODERATE            1
+//#define RADIOCONFIG_PREAMBLE_LEN        10           // preamble length (LoRa: num symbols, FSK: num bytes)
+//#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
+//#define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
 // /* mod8 (FSK 125kHz) */
-// #define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
-// #define RADIOCONFIG_FREQUENCY           869012500    // center frequency [Hz]
-// #define RADIOCONFIG_MODULATION          MODEM_FSK    // modem (options: MODEM_LORA, MODEM_FSK)
-// #define RADIOCONFIG_DATARATE            125000       // datarate (FSK: bits/s, LoRa: spreading-factor)
-// #define RADIOCONFIG_BANDWIDTH           234300       // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
-// #define RADIOCONFIG_CODERATE            0
-// #define RADIOCONFIG_PREAMBLE_LEN        2            // preamble length (LoRa: num symbols, FSK: num bytes)
-// #define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
-// #define RADIOCONFIG_CRC_ON              1            // CRC enabled
+//#define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
+//#define RADIOCONFIG_FREQUENCY           869012500    // center frequency [Hz]
+//#define RADIOCONFIG_MODULATION          MODEM_FSK    // modem (options: MODEM_LORA, MODEM_FSK)
+//#define RADIOCONFIG_DATARATE            125000       // datarate (FSK: bits/s, LoRa: spreading-factor)
+//#define RADIOCONFIG_BANDWIDTH           234300       // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
+//#define RADIOCONFIG_CODERATE            0
+//#define RADIOCONFIG_PREAMBLE_LEN        2            // preamble length (LoRa: num symbols, FSK: num bytes)
+//#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
+//#define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
 /* mod10 (FSK 250kHz) */
-// #define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
-// #define RADIOCONFIG_FREQUENCY           869012500    // center frequency [Hz]
-// #define RADIOCONFIG_MODULATION          MODEM_FSK    // modem (options: MODEM_LORA, MODEM_FSK)
-// #define RADIOCONFIG_DATARATE            125000       // datarate (FSK: bits/s, LoRa: spreading-factor)
-// #define RADIOCONFIG_BANDWIDTH           234300       // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
-// #define RADIOCONFIG_CODERATE            0
-// #define RADIOCONFIG_PREAMBLE_LEN        2            // preamble length (LoRa: num symbols, FSK: num bytes)
-// #define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
-// #define RADIOCONFIG_CRC_ON              1            // CRC enabled
+//#define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
+//#define RADIOCONFIG_FREQUENCY           869012500    // center frequency [Hz]
+//#define RADIOCONFIG_MODULATION          MODEM_FSK    // modem (options: MODEM_LORA, MODEM_FSK)
+//#define RADIOCONFIG_DATARATE            125000       // datarate (FSK: bits/s, LoRa: spreading-factor)
+//#define RADIOCONFIG_BANDWIDTH           234300       // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
+//#define RADIOCONFIG_CODERATE            0
+//#define RADIOCONFIG_PREAMBLE_LEN        2            // preamble length (LoRa: num symbols, FSK: num bytes)
+//#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
+//#define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
 // /* mod10 (FSK 250kHz) */
-// #define RADIOCONFIG_TX_POWER            0            // transmit power [dBm] (valid range: -9...+22)
-// #define RADIOCONFIG_FREQUENCY           869012500    // center frequency [Hz]
-// #define RADIOCONFIG_MODULATION          MODEM_FSK    // modem (options: MODEM_LORA, MODEM_FSK)
-// #define RADIOCONFIG_DATARATE            250000       // datarate (FSK: bits/s, LoRa: spreading-factor)
-// #define RADIOCONFIG_BANDWIDTH           312000       // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
-// #define RADIOCONFIG_CODERATE            0
-// #define RADIOCONFIG_PREAMBLE_LEN        4            // preamble length (LoRa: num symbols, FSK: num bytes)
-// #define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
-// #define RADIOCONFIG_CRC_ON              1            // CRC enabled
+#define RADIOCONFIG_TX_POWER            0            // transmit power [dBm] (valid range: -9...+22)
+#define RADIOCONFIG_FREQUENCY           869012500    // center frequency [Hz]
+#define RADIOCONFIG_MODULATION          MODEM_FSK    // modem (options: MODEM_LORA, MODEM_FSK)
+#define RADIOCONFIG_DATARATE            250000       // datarate (FSK: bits/s, LoRa: spreading-factor)
+#define RADIOCONFIG_BANDWIDTH           312000       // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
+#define RADIOCONFIG_CODERATE            0
+#define RADIOCONFIG_PREAMBLE_LEN        4            // preamble length (LoRa: num symbols, FSK: num bytes)
+#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
+#define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
 
 /* debugging ******************************************************************/

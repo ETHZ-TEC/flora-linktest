@@ -149,7 +149,7 @@ void vTask_linktest(void const * argument)
       for (txIdx=0; txIdx<TESTCONFIG_NUM_TX; txIdx++) {
         // send
         msg.counter = txIdx;
-        key_length  = strlen(msg.key)+1;
+        key_length  = strlen(msg.key);
         key_length  = (key_length > 254) ? 254 : key_length;
         Radio.Send((uint8_t*) &msg, sizeof(msg.counter) + key_length);
 
@@ -180,7 +180,6 @@ void vTask_linktest(void const * argument)
       // start rx mode (with deactivated preamble IRQs)
       Radio.RxBoostedMask(LINKTEST_IRQ_MASK);
       // LOG_INFO("RxBoostedMask executed");
-      linktest_check_radio_status(false);
 
       // wait
       vTaskDelayUntil(&xLastRoundPeriodStart, pdMS_TO_TICKS(RoundPeriod));

@@ -17,7 +17,6 @@
 /* Global variables */
 RadioEvents_t radioEvents;
 
-extern bool IrqFired;
 
 /******************************************************************************
  * Functions
@@ -32,17 +31,7 @@ extern bool IrqFired;
 void linktest_radio_irq_capture_callback(void) {
   // Execute Radio driver callback
   (*RadioOnDioIrqCallback)();
-
-  // // direct
-  // Radio.IrqProcess();
-
-  // via radio task
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  /* Notify radio task and make sure it executes one Radio.IrqProcess() iteration */
-  vTaskNotifyGiveFromISR(xTaskHandle_radioLinktest,
-                         &xHigherPriorityTaskWoken );
-  // Trigger the FreeRTOS scheduler to perform context switch if necessary
-  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  Radio.IrqProcess();
 }
 
 void linktest_OnRadioCadDone(_Bool detected) {
@@ -55,7 +44,6 @@ void linktest_Dummy(void) {
 
 void linktest_OnRxSync(void) {
   // LOG_INFO("RxSync");
-  linktest_check_radio_status(true);
 }
 
 void linktest_OnRadioTxDone(void) {
@@ -66,19 +54,29 @@ void linktest_OnRadioTxDone(void) {
 void linktest_OnRadioRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8_t snr, bool crc_error) {
   /* RxDone callback from the radio */
   linktest_message_t *msg = (linktest_message_t*) payload;
+  /* replace all invalid characters in the payload */
+  uint32_t i;
+  for (i = sizeof(msg->counter); i < size; i++) {
+    if (payload[i] < 33 || payload[i] > 126 || payload[i] == '\\' || payload[i] == '"') {
+      payload[i] = '?';
+    }
+  }
+  /* make sure the string is terminated by a zero at the end */
+  payload[size] = 0;
   LOG_INFO( "{\"type\":\"RxDone\","
             "\"key\":\"%s\","
-            "\"counter\":\"%d\","
-            "\"rssi\": %d,"
+            "\"size\":%d,"
+            "\"counter\":%d,"
+            "\"rssi\":%d,"
             "\"snr\":%d,"
             "\"crc_error\":%d}",
     msg->key,
+    size,
     msg->counter,
     rssi,
     snr,
     crc_error
   );
-  linktest_check_radio_status(true);
 }
 
 /******************************************************************************
@@ -202,23 +200,3 @@ void linktest_set_rx_config_fsk(void) {
     true                      // rxContinuous
   );
 }
-
-void linktest_check_radio_status(bool restart_rx)
-{
-  RadioStatus_t status;
-  status = SX126xGetStatus();
-  // LOG_INFO("Radio status chip mode: %d, Radio status command status: %d", status.Fields.ChipMode, status.Fields.CmdStatus);
-
-  // Workaround: Restart rx mode if radio is no longer in rx mode (should no longer occur)
-  if (status.Fields.ChipMode != MODE_RX && restart_rx) {
-    // Workaround: Process pending IRQ in case IrqFired=false (should no longer occur)
-    if (RADIO_READ_DIO1_PIN() && IrqFired==false) {
-      (*RadioOnDioIrqCallback)();   // ensure IrqFired=true
-      Radio.IrqProcess();           // handle and clear radio interrupt
-      LOG_INFO("Workaround: Handle interrupt when IrqFired=false ...");
-    }
-    LOG_INFO("Workaround: Restarting Rx ...");
-    Radio.RxBoostedMask(LINKTEST_IRQ_MASK);
-  }
-}
-

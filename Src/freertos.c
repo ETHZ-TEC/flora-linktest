@@ -54,21 +54,17 @@
 /* USER CODE BEGIN Variables */
 /* RTOS Task Handles ---------------------------------------------------------*/
 TaskHandle_t xTaskHandle_linktest = NULL;
-TaskHandle_t xTaskHandle_radioLinktest = NULL;
 /* RTOS Queue Handles --------------------------------------------------------*/
-QueueHandle_t xQueueHandle_transmit = NULL;
 /* Variables */
-bool round_finished = false;
-uint64_t active_time = 0;
+bool     round_finished   = false;
+uint64_t active_time      = 0;
 uint64_t wakeup_timestamp = 0;
 
-extern TIM_HandleTypeDef        htim1;
 /* USER CODE END Variables */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 void vTask_linktest(void* argument);
-void vTask_radio_linktest(void* argument);
 
 /* USER CODE END FunctionPrototypes */
 
@@ -176,12 +172,6 @@ void RTOS_Init(void)
           NULL,
           tskIDLE_PRIORITY + 1,
           &xTaskHandle_linktest) != pdPASS)  { Error_Handler(); }
-  if(xTaskCreate(vTask_radio_linktest,
-          "linktestRadioTask",
-          configMINIMAL_STACK_SIZE + 128,
-          NULL,
-          tskIDLE_PRIORITY + 1,
-          &xTaskHandle_radioLinktest) != pdPASS)     { Error_Handler(); }
 }
 
 uint32_t RTOS_getDutyCycle(void)
