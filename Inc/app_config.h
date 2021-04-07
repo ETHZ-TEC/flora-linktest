@@ -29,13 +29,15 @@
 
 /* Link test configuration ****************************************************/
 // linktest type (selecte exactly one!)
-#define LINKTEST_P2P                    1            // Linktest with point-to-point transmissions
-#define LINKTEST_FLOOD                  0            // Linktest with floods
+#define LINKTEST_P2P                    0            // Linktest with point-to-point transmissions
+#define LINKTEST_FLOOD                  1            // Linktest with floods
 
 // testconfig (required for all types of linktests)
-#define TESTCONFIG_NUM_NODES            30
-#define TESTCONFIG_NODE_IDS             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
-#define TESTCONFIG_NUM_SLOTS            20
+#define TESTCONFIG_NUM_NODES            5
+#define TESTCONFIG_NODE_IDS             1, 2, 3, 4, 5
+// #define TESTCONFIG_NUM_NODES            30
+// #define TESTCONFIG_NODE_IDS             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+#define TESTCONFIG_NUM_SLOTS            10
 #define TESTCONFIG_SETUP_TIME           500          // SetupTime [ms]
 #define TESTCONFIG_START_DELAY          1000         // StartDelay [ms]
 #define TESTCONFIG_STOP_DELAY           1000         // StopDelay [ms]
@@ -43,27 +45,30 @@
 #define TESTCONFIG_KEY                  "deadbeef"   // payload of RF packets (no special characters!)
 
 // flood config (required only for LINKTEST_FLOOD)
+#define FLOODCONFIG_RF_BAND             46           // frequency band index as defined in radio_constants.c
 #define FLOODCONFIG_TX_POWER            0            // transmit power [dBm] (valid range: -9...+22)
-#define FLOODCONFIG_FREQUENCY           865440000    // center frequency [Hz]
+#define FLOODCONFIG_MODULATION          10           // flora modulation index as defined in radio_constants.c
 #define FLOODCONFIG_N_TX                2            // number of (re)transmissions
 #define FLOODCONFIG_NUM_HOPS            6            // number of hopts (should match network diameter in hops)
+#define FLOODCONFIG_FLOOD_GAP           100          // safety margin (in ms) before and after the initiator performs the flood
 #define FLOODCONFIG_DELAY_TX            0            // delay retransmissions
                                                      //   n=0: no node delays anything; in different rounds, different nodes initiate flood;
                                                      //   n!=0: in different rounds, different nodes delay retransmission by n hops (single fixed initiator for all rounds)
+#define FLOODCONFIG_INITIATOR           2            // node ID of flood initiator (has an effect only if FLOODCONFIG_DELAY_TX!=0)
 
 // radio config (required only for LINKTEST_P2P)
-/* mod5 (SF7) */
-#define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
-#define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
-#define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
-#define RADIOCONFIG_DATARATE            7            // datarate (FSK: bits/s, LoRa: spreading-factor)
-#define RADIOCONFIG_BANDWIDTH           0            // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
-#define RADIOCONFIG_CODERATE            1
-#define RADIOCONFIG_PREAMBLE_LEN        10           // preamble length (LoRa: num symbols, FSK: num bytes)
-#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
-#define RADIOCONFIG_CRC_ON              1            // CRC enabled
+// /* mod5 (SF7) */
+// #define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
+// #define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
+// #define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
+// #define RADIOCONFIG_DATARATE            7            // datarate (FSK: bits/s, LoRa: spreading-factor)
+// #define RADIOCONFIG_BANDWIDTH           0            // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
+// #define RADIOCONFIG_CODERATE            1
+// #define RADIOCONFIG_PREAMBLE_LEN        10           // preamble length (LoRa: num symbols, FSK: num bytes)
+// #define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
+// #define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
-/* mod7 (SF5) */
+// /* mod7 (SF5) */
 //#define RADIOCONFIG_TX_POWER            -9           // transmit power [dBm] (valid range: -9...+22)
 //#define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
 //#define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
@@ -74,7 +79,7 @@
 //#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
 //#define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
-/* mod0 (SF12) */
+// /* mod0 (SF12) */
 //#define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
 //#define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
 //#define RADIOCONFIG_MODULATION          MODEM_LORA   // modem (options: MODEM_LORA, MODEM_FSK)
@@ -107,16 +112,16 @@
 //#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
 //#define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
-// // /* mod10 (FSK 250kHz) */
-// #define RADIOCONFIG_TX_POWER            0            // transmit power [dBm] (valid range: -9...+22)
-// #define RADIOCONFIG_FREQUENCY           869012500    // center frequency [Hz]
-// #define RADIOCONFIG_MODULATION          MODEM_FSK    // modem (options: MODEM_LORA, MODEM_FSK)
-// #define RADIOCONFIG_DATARATE            250000       // datarate (FSK: bits/s, LoRa: spreading-factor)
-// #define RADIOCONFIG_BANDWIDTH           312000       // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
-// #define RADIOCONFIG_CODERATE            0
-// #define RADIOCONFIG_PREAMBLE_LEN        4            // preamble length (LoRa: num symbols, FSK: num bytes)
-// #define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
-// #define RADIOCONFIG_CRC_ON              1            // CRC enabled
+// /* mod10 (FSK 250kHz) */
+#define RADIOCONFIG_TX_POWER            0            // transmit power [dBm] (valid range: -9...+22)
+#define RADIOCONFIG_FREQUENCY           869012500    // center frequency [Hz]
+#define RADIOCONFIG_MODULATION          MODEM_FSK    // modem (options: MODEM_LORA, MODEM_FSK)
+#define RADIOCONFIG_DATARATE            250000       // datarate (FSK: bits/s, LoRa: spreading-factor)
+#define RADIOCONFIG_BANDWIDTH           312000       // bandwidth (LoRa: 0 = 125 kHz, FSK: bandwidth in Hz)
+#define RADIOCONFIG_CODERATE            0
+#define RADIOCONFIG_PREAMBLE_LEN        4            // preamble length (LoRa: num symbols, FSK: num bytes)
+#define RADIOCONFIG_IMPLICIT_HEADER     0            // implicit header (LoRa only)
+#define RADIOCONFIG_CRC_ON              1            // CRC enabled
 
 
 /* debugging ******************************************************************/

@@ -13,11 +13,15 @@
 #ifndef LINKTEST_H_
 #define LINKTEST_H_
 
+typedef struct {
+  uint16_t counter;
+  char key[254];
+} linktest_message_t;
+
 void linktest_init(uint32_t *slotTime);
 void linktest_round_pre(uint8_t roundIdx);
 void linktest_round_post(uint8_t roundIdx);
 void linktest_slot(uint8_t roundIdx, uint16_t slotIdx, TickType_t slotStartTs);
-
 
 void linktest_set_tx_config_lora(void);
 void linktest_set_tx_config_fsk(void);
@@ -35,10 +39,8 @@ void linktest_OnRadioTxDone(void);
 void linktest_OnRxSync(void);
 void linktest_Dummy(void);
 
-typedef struct {
-  uint16_t counter;
-  char key[254];
-} linktest_message_t;
+void linktest_sanitize_string(char *payload, uint8_t size);
+void linktest_print_flood_stats(bool is_initiator, linktest_message_t* msg);
 
 #define LINKTEST_IRQ_MASK   (IRQ_HEADER_VALID | IRQ_SYNCWORD_VALID | IRQ_RX_DONE | IRQ_TX_DONE | IRQ_HEADER_ERROR | IRQ_CRC_ERROR)
 

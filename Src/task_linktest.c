@@ -68,8 +68,6 @@ void vTask_linktest(void const * argument)
   log_flush();
 #endif /* LOG_PRINT_IMMEDIATELY */
 
-  linktest_radio_init();
-
   uint32_t SlotTime;
   linktest_init(&SlotTime);
 
