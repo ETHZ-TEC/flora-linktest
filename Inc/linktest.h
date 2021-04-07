@@ -13,6 +13,12 @@
 #ifndef LINKTEST_H_
 #define LINKTEST_H_
 
+void linktest_init(uint32_t *slotTime);
+void linktest_round_pre(uint8_t roundIdx);
+void linktest_round_post(uint8_t roundIdx);
+void linktest_slot(uint8_t roundIdx, uint16_t slotIdx, TickType_t slotStartTs);
+
+
 void linktest_set_tx_config_lora(void);
 void linktest_set_tx_config_fsk(void);
 void linktest_set_rx_config_lora(void);

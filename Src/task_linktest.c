@@ -14,17 +14,15 @@
 
 #include "main.h"
 
+extern const uint16_t TESTCONFIG_NODE_LIST[];
+
 
 void vTask_linktest(void const * argument)
 {
-  const uint16_t TESTCONFIG_NODE_LIST[TESTCONFIG_NUM_NODES] = {
-    TESTCONFIG_NODE_IDS
-  };
-
   const uint32_t SetupTime  = TESTCONFIG_SETUP_TIME;
   const uint32_t StartDelay = TESTCONFIG_START_DELAY;
   const uint32_t StopDelay  = TESTCONFIG_STOP_DELAY;
-  const uint32_t TxSlack    = TESTCONFIG_TX_SLACK;
+  const uint32_t SlotGap    = TESTCONFIG_SLOT_GAP;
 
   vTaskDelay(pdMS_TO_TICKS(1000));
   LOG_INFO_CONST("linktest task started!");
@@ -37,11 +35,11 @@ void vTask_linktest(void const * argument)
            "\"txSlack\":%d,"
            "\"key\":\"%s\"}",
     TESTCONFIG_NUM_NODES,
-    TESTCONFIG_NUM_TX,
+    TESTCONFIG_NUM_SLOTS,
     TESTCONFIG_SETUP_TIME,
     TESTCONFIG_START_DELAY,
     TESTCONFIG_STOP_DELAY,
-    TESTCONFIG_TX_SLACK,
+    TESTCONFIG_SLOT_GAP,
     TESTCONFIG_KEY
   );
 
@@ -72,36 +70,11 @@ void vTask_linktest(void const * argument)
 
   linktest_radio_init();
 
-  linktest_message_t msg = {
-    .counter=0,
-    .key=TESTCONFIG_KEY,
-  };
+  uint32_t SlotTime;
+  linktest_init(&SlotTime);
 
-  // /* Calculate TimeOnAir */
-  uint16_t key_length = 0;
-  key_length = strlen(msg.key)+1;
-  key_length = (key_length > 254) ? 254 : key_length;
-  uint32_t TxTime = Radio.TimeOnAir(
-    RADIOCONFIG_MODULATION,
-    RADIOCONFIG_BANDWIDTH,
-    RADIOCONFIG_DATARATE,
-    RADIOCONFIG_CODERATE,
-    RADIOCONFIG_PREAMBLE_LEN,
-    0,  // fixLen
-    sizeof(msg.counter) + key_length,
-    RADIOCONFIG_CRC_ON
-  )/1000; // TimeOnAir returns us, we need ms
-  uint32_t TxPeriod = TxTime + TxSlack;
-  uint32_t RoundPeriod = SetupTime + StartDelay + (TESTCONFIG_NUM_TX-1)*TxPeriod + TxTime + StopDelay;
-
-  // workaround for no successful rx in FSK mode if no Tx happened before
-  // simple Radio.Send alone with 0 size payload does not work
-  if (RADIOCONFIG_MODULATION == MODEM_FSK) {
-    linktest_set_tx_config_fsk();
-    Radio.Standby();
-    Radio.Send((uint8_t*) &msg, sizeof(msg.counter) + key_length);
-    // Radio.Send((uint8_t*) &msg, 0);
-  }
+  uint32_t SlotPeriod = SlotTime + SlotGap;
+  uint32_t RoundPeriod = SetupTime + StartDelay + (TESTCONFIG_NUM_SLOTS-1)*SlotPeriod + SlotTime + StopDelay;
 
   /* wait for sync signal */
   while (FLOCKLAB_PIN_GET(FLOCKLAB_SIG1) == 0) {
@@ -112,82 +85,46 @@ void vTask_linktest(void const * argument)
   TickType_t xLastRoundPeriodStart = xTaskGetTickCount();
   TickType_t xTmpTs = xLastRoundPeriodStart;
 
-  uint8_t nodeIdx;
-  uint16_t txIdx;
-  for (nodeIdx=0; nodeIdx<TESTCONFIG_NUM_NODES; nodeIdx++) {
+  uint8_t roundIdx;
+  uint16_t slotIdx;
+  for (roundIdx=0; roundIdx<TESTCONFIG_NUM_NODES; roundIdx++) {
     // indicate start of round (indication happens before SetupTime)
     FLOCKLAB_PIN_SET(FLOCKLAB_INT1);
     vTaskDelay(pdMS_TO_TICKS(1));
     FLOCKLAB_PIN_CLR(FLOCKLAB_INT1);
-    if (TESTCONFIG_NODE_LIST[nodeIdx] == NODE_ID) {
-      /* Node is transmitting in this round */
-      // prepare tx
-      if (RADIOCONFIG_MODULATION == MODEM_LORA) {
-        linktest_set_tx_config_lora();
-      }
-      else {
-        linktest_set_tx_config_fsk();
-      }
-      Radio.Standby();
 
-      uint16_t key_length = 0;
-      linktest_message_t msg = {
-        .counter=0,
-        .key=TESTCONFIG_KEY,
-      };
+    // wait SetupTime
+    xTmpTs = xLastRoundPeriodStart;
+    vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime));
+    // start of round
+    LOG_INFO("{\"type\":\"StartOfRound\",\"round\":%d,\"node\":%d}", roundIdx, TESTCONFIG_NODE_LIST[roundIdx]);
 
-      // wait
-      xTmpTs = xLastRoundPeriodStart;
-      vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime));
+    linktest_round_pre(roundIdx);
 
-      // start of round
-      LOG_INFO("{\"type\":\"StartOfRound\",\"node\":%d}", TESTCONFIG_NODE_LIST[nodeIdx]);
-      // wait
+    for (slotIdx=0; slotIdx<TESTCONFIG_NUM_SLOTS; slotIdx++) {
+      // wait StartDelay
       xTmpTs = xLastRoundPeriodStart;
       vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime + StartDelay));
 
-      for (txIdx=0; txIdx<TESTCONFIG_NUM_TX; txIdx++) {
-        // send
-        msg.counter = txIdx;
-        key_length  = strlen(msg.key);
-        key_length  = (key_length > 254) ? 254 : key_length;
-        Radio.Send((uint8_t*) &msg, sizeof(msg.counter) + key_length);
-
-        // wait, if not last iteration
-        if (txIdx < (TESTCONFIG_NUM_TX-1)) {
-          xTmpTs = xLastRoundPeriodStart;
-          vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime + StartDelay + (txIdx+1)*TxPeriod));
-        }
-      }
-      // wait
-      vTaskDelayUntil(&xLastRoundPeriodStart, pdMS_TO_TICKS(RoundPeriod));
-    }
-    else {
-      /* Node is receiving in this round */
-      if (RADIOCONFIG_MODULATION == MODEM_LORA) {
-        linktest_set_rx_config_lora();
-      }
-      else {
-        linktest_set_rx_config_fsk();
+      linktest_slot(roundIdx, slotIdx, SetupTime + StartDelay + (slotIdx+1)*SlotPeriod);
+      // wait, if not last iteration
+      if (slotIdx < (TESTCONFIG_NUM_SLOTS-1)) {
+        xTmpTs = xLastRoundPeriodStart;
+        vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime + StartDelay + (slotIdx+1)*SlotPeriod));
       }
 
-      // wait
-      xTmpTs = xLastRoundPeriodStart;
-      vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime));
-      // start of round
-      LOG_INFO("{\"type\":\"StartOfRound\",\"node\":%d}", TESTCONFIG_NODE_LIST[nodeIdx]);
-
-      // start rx mode (with deactivated preamble IRQs)
-      Radio.RxBoostedMask(LINKTEST_IRQ_MASK);
-      // LOG_INFO("RxBoostedMask executed");
-
-      // wait
-      vTaskDelayUntil(&xLastRoundPeriodStart, pdMS_TO_TICKS(RoundPeriod));
-
-      Radio.Standby();
+      // wait, if not last iteration
+      if (slotIdx < (TESTCONFIG_NUM_SLOTS-1)) {
+        xTmpTs = xLastRoundPeriodStart;
+        vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime + StartDelay + (slotIdx+1)*SlotPeriod));
+      }
     }
 
-    LOG_INFO("{\"type\":\"EndOfRound\",\"node\":%d}", TESTCONFIG_NODE_LIST[nodeIdx]);
+    vTaskDelayUntil(&xLastRoundPeriodStart, pdMS_TO_TICKS(RoundPeriod));
+
+    linktest_round_post(roundIdx);
+
+    LOG_INFO("{\"type\":\"EndOfRound\",\"round\":%d,\"node\":%d}", roundIdx, TESTCONFIG_NODE_LIST[roundIdx]);
 
 #if !LOG_PRINT_IMMEDIATELY
     log_flush();
@@ -208,4 +145,3 @@ void vTask_linktest(void const * argument)
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
-

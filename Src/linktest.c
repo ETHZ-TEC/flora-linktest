@@ -17,12 +17,87 @@
 /* Global variables */
 RadioEvents_t radioEvents;
 
+const uint16_t TESTCONFIG_NODE_LIST[TESTCONFIG_NUM_NODES] = {
+  TESTCONFIG_NODE_IDS
+};
+
 
 /******************************************************************************
- * Functions
+ * Linktest Functions
  ******************************************************************************/
 
+void linktest_init(uint32_t *slotTime) {
+  // /* Calculate SlotTime */
+  linktest_message_t msg = {
+    .counter=0,
+    .key=TESTCONFIG_KEY,
+  };
+  uint16_t key_length = 0;
+  key_length = strlen(msg.key)+1;
+  key_length = (key_length > 254) ? 254 : key_length;
+  *slotTime = Radio.TimeOnAir(
+    RADIOCONFIG_MODULATION,
+    RADIOCONFIG_BANDWIDTH,
+    RADIOCONFIG_DATARATE,
+    RADIOCONFIG_CODERATE,
+    RADIOCONFIG_PREAMBLE_LEN,
+    0,  // fixLen
+    sizeof(msg.counter) + key_length,
+    RADIOCONFIG_CRC_ON
+  )/1000; // TimeOnAir returns us, we need ms
 
+  // workaround for no successful rx in FSK mode if no Tx happened before
+  // simple Radio.Send alone with 0 size payload does not work
+  if (RADIOCONFIG_MODULATION == MODEM_FSK) {
+    linktest_set_tx_config_fsk();
+    Radio.Standby();
+    Radio.SendPayload((uint8_t*) &msg, sizeof(msg.counter) + key_length);
+    // Radio.Send((uint8_t*) &msg, 0);
+  }
+}
+
+void linktest_round_pre(uint8_t roundIdx) {
+  // set radio config (fixed for entire round)
+  if (RADIOCONFIG_MODULATION == MODEM_LORA) {
+   linktest_set_tx_config_lora();
+   linktest_set_rx_config_lora();
+  }
+  else {
+   linktest_set_tx_config_fsk();
+   linktest_set_rx_config_fsk();
+  }
+  Radio.Standby();
+
+  if (TESTCONFIG_NODE_LIST[roundIdx] != NODE_ID) {
+    /* Node is receiving in this round */
+
+    // start rx mode (with deactivated preamble IRQs)
+    Radio.RxBoostedMask(LINKTEST_IRQ_MASK, 0, true, false);
+  }
+}
+
+void linktest_round_post(uint8_t roundIdx) {
+  Radio.Standby(); // required for Rx, no harm for Tx
+}
+
+void linktest_slot(uint8_t roundIdx, uint16_t slotIdx, uint32_t slotStartTs) {
+  if (TESTCONFIG_NODE_LIST[roundIdx] == NODE_ID) {
+    /* Node is transmitting in this round */
+
+    // send
+    static linktest_message_t msg = {
+      .counter=0,
+      .key=TESTCONFIG_KEY,
+    };
+    msg.counter = slotIdx;
+    uint16_t key_length = strlen(msg.key);
+    key_length  = (key_length > 254) ? 254 : key_length;
+    Radio.SendPayload((uint8_t*) &msg, sizeof(msg.counter) + key_length);
+  } else {
+    /* Node is receiving in this round */
+    // nothing to do
+  }
+}
 
 /******************************************************************************
  * Radio Callbacks
@@ -143,12 +218,10 @@ void linktest_set_rx_config_lora(void) {
     RADIOCONFIG_CRC_ON,          // crcOn
     false,                       // FreqHopOn
     0,                           // HopPeriod
-    false,                       // iqInverted
-    true                         // rxContinuous
+    false                        // iqInverted
   );
 }
 
-/*$$$*/
 void linktest_set_tx_config_fsk(void) {
   // determine fdev from bandwidth and datarate
   // NOTE: according to the datasheet afc_bandwidth (automated frequency control bandwidth) variable represents the frequency error (2x crystal frequency error)
@@ -175,10 +248,7 @@ void linktest_set_tx_config_fsk(void) {
 }
 
 void linktest_set_rx_config_fsk(void) {
-  // determine fdev from bandwidth and datarate
-  // NOTE: according to the datasheet afc_bandwidth (automated frequency control bandwidth) variable represents the frequency error (2x crystal frequency error)
-  uint32_t afc_bandwidth = 2 * (RADIOCONFIG_BANDWIDTH / 2 + RADIOCONFIG_FREQUENCY) / RADIO_CLOCK_DRIFT;
-  int32_t  bandwidth_rx  = RADIOCONFIG_BANDWIDTH + afc_bandwidth; // for rx only
+  int32_t bandwidth_rx = radio_get_rx_bandwidth(RADIOCONFIG_FREQUENCY, RADIOCONFIG_BANDWIDTH);
 
   Radio.Standby();
   Radio.SetChannel(RADIOCONFIG_FREQUENCY);  // center frequency [Hz]
@@ -196,7 +266,6 @@ void linktest_set_rx_config_fsk(void) {
     RADIOCONFIG_CRC_ON,       // crcOn
     false,                    // FreqHopOn
     0,                        // HopPeriod
-    false,                    // iqInverted
-    true                      // rxContinuous
+    false                     // iqInverted
   );
 }

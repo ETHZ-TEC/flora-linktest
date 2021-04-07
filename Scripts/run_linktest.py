@@ -62,13 +62,17 @@ def readConfig(symbol, configFile='../Inc/app_config.h', idx=None):
 
 def readAllConfig():
     ret = dict()
+    ret['LINKTEST_P2P'] = readConfig('LINKTEST_P2P')
+    ret['LINKTEST_FLOOD'] = readConfig('LINKTEST_FLOOD')
+    ret['LINKTEST_FLOOD_DELAYED'] = readConfig('LINKTEST_FLOOD_DELAYED')
+
     ret['TESTCONFIG_KEY'] = readConfig('TESTCONFIG_KEY').replace('"', '').replace("'", "")
-    ret['TESTCONFIG_NUM_TX'] = int(readConfig('TESTCONFIG_NUM_TX'))
+    ret['TESTCONFIG_NUM_SLOTS'] = int(readConfig('TESTCONFIG_NUM_SLOTS'))
     ret['TESTCONFIG_NUM_NODES'] = int(readConfig('TESTCONFIG_NUM_NODES'))
     ret['TESTCONFIG_SETUP_TIME'] = int(readConfig('TESTCONFIG_SETUP_TIME'))         # SetupTime [ms]
     ret['TESTCONFIG_START_DELAY'] = int(readConfig('TESTCONFIG_START_DELAY'))       # StartDelay [ms]
     ret['TESTCONFIG_STOP_DELAY'] = int(readConfig('TESTCONFIG_STOP_DELAY'))         # StopDelay [ms]
-    ret['TESTCONFIG_TX_SLACK'] = int(readConfig('TESTCONFIG_TX_SLACK'))             # TxSlack [ms]
+    ret['TESTCONFIG_SLOT_GAP'] = int(readConfig('TESTCONFIG_SLOT_GAP'))             # TxSlack [ms]
 
     ret['RADIOCONFIG_TX_POWER'] = int(readConfig('RADIOCONFIG_TX_POWER'))
     ret['RADIOCONFIG_FREQUENCY'] = int(readConfig('RADIOCONFIG_FREQUENCY'))
@@ -91,14 +95,17 @@ def readAllConfig():
     ret['RADIOCONFIG_PREAMBLE_LEN'] = int(readConfig('RADIOCONFIG_PREAMBLE_LEN'))
 
     # DEBUG
-    print('TESTCONFIG_KEY={}\nTESTCONFIG_NUM_TX={}\nTESTCONFIG_NUM_NODES={}\nTESTCONFIG_SETUP_TIME={}\nTESTCONFIG_START_DELAY={}\nTESTCONFIG_STOP_DELAY={}\nTESTCONFIG_TX_SLACK={}\nRADIOCONFIG_TX_POWER={}\nRADIOCONFIG_FREQUENCY={}\nRADIOCONFIG_MODULATION={}\nRADIOCONFIG_PAYLOAD_LEN={}\nRADIOCONFIG_BANDWIDTH={}\nRADIOCONFIG_DATARATE={}\nRADIOCONFIG_CODERATE={}\nRADIOCONFIG_IMPLICIT_HEADER={}\nRADIOCONFIG_CRC_ON={}\nRADIOCONFIG_PREAMBLE_LEN={}'.format(
+    print('LINKTEST_P2P={}\nLINKTEST_FLOOD={}\nLINKTEST_FLOOD_DELAYED={}\nTESTCONFIG_KEY={}\nTESTCONFIG_NUM_SLOTS={}\nTESTCONFIG_NUM_NODES={}\nTESTCONFIG_SETUP_TIME={}\nTESTCONFIG_START_DELAY={}\nTESTCONFIG_STOP_DELAY={}\nTESTCONFIG_SLOT_GAP={}\nRADIOCONFIG_TX_POWER={}\nRADIOCONFIG_FREQUENCY={}\nRADIOCONFIG_MODULATION={}\nRADIOCONFIG_PAYLOAD_LEN={}\nRADIOCONFIG_BANDWIDTH={}\nRADIOCONFIG_DATARATE={}\nRADIOCONFIG_CODERATE={}\nRADIOCONFIG_IMPLICIT_HEADER={}\nRADIOCONFIG_CRC_ON={}\nRADIOCONFIG_PREAMBLE_LEN={}'.format(
+        ret['LINKTEST_P2P'],
+        ret['LINKTEST_FLOOD'],
+        ret['LINKTEST_FLOOD_DELAYED'],
         ret['TESTCONFIG_KEY'],
-        ret['TESTCONFIG_NUM_TX'],
+        ret['TESTCONFIG_NUM_SLOTS'],
         ret['TESTCONFIG_NUM_NODES'],
         ret['TESTCONFIG_SETUP_TIME'],
         ret['TESTCONFIG_START_DELAY'],
         ret['TESTCONFIG_STOP_DELAY'],
-        ret['TESTCONFIG_TX_SLACK'],
+        ret['TESTCONFIG_SLOT_GAP'],
         ret['RADIOCONFIG_TX_POWER'],
         ret['RADIOCONFIG_FREQUENCY'],
         ret['RADIOCONFIG_MODULATION'],
@@ -140,14 +147,14 @@ def calculateLinktestDuration(config):
     else:
         raise Exception('Unknown modulation!')
 
-    txPeriod = timeOnAir + config['TESTCONFIG_TX_SLACK']/1e3
-    roundPeriod = config['TESTCONFIG_SETUP_TIME']/1e3 + config['TESTCONFIG_START_DELAY']/1e3 + (config['TESTCONFIG_NUM_TX']-1)*txPeriod + timeOnAir + config['TESTCONFIG_STOP_DELAY']/1e3
+    txPeriod = timeOnAir + config['TESTCONFIG_SLOT_GAP']/1e3
+    roundPeriod = config['TESTCONFIG_SETUP_TIME']/1e3 + config['TESTCONFIG_START_DELAY']/1e3 + (config['TESTCONFIG_NUM_SLOTS']-1)*txPeriod + timeOnAir + config['TESTCONFIG_STOP_DELAY']/1e3
     testDuration = FREERTOS_STARTUP + SYNC_DELAY + config['TESTCONFIG_NUM_NODES'] * roundPeriod + SLACK
 
     print('Time-on-air single Tx: {:.6f} s'.format(timeOnAir))
     print('Duration of round: {:.6f} s'.format(roundPeriod))
     print('Duration of linktest: {:.6f} s'.format(testDuration))
-    print('Tx time per node: {:.6f} s'.format(timeOnAir * config['TESTCONFIG_NUM_TX']))
+    print('Tx time per node: {:.6f} s'.format(timeOnAir * config['TESTCONFIG_NUM_SLOTS']))
 
     return testDuration
 
@@ -155,10 +162,10 @@ def calculateLinktestDuration(config):
 def getDescription(config):
     modulation = ""
     if "lora" in config['RADIOCONFIG_MODULATION']:
-        modulation = "LoRa SF%d" % (config['RADIOCONFIG_DATARATE'])
+        modulation = "LoRa SF{}".format(config['RADIOCONFIG_DATARATE'])
     else:
-        modulation = "FSK %dkbps" % (config['RADIOCONFIG_DATARATE'] / 1000)
-    return "%s  %d.%03dMHz  %ddBm" % (modulation, config['RADIOCONFIG_FREQUENCY'] / 1000000, (config['RADIOCONFIG_FREQUENCY'] / 1000) % 1000, config['RADIOCONFIG_TX_POWER'])
+        modulation = "FSK {:.0f}kbps".format(config['RADIOCONFIG_DATARATE'] / 1e3)
+    return "{}  {:.3f}MHz  {}dBm".format(modulation, config['RADIOCONFIG_FREQUENCY'] / 1e6, config['RADIOCONFIG_TX_POWER'])
 
 
 def create_test():
