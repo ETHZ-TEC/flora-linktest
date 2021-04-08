@@ -37,7 +37,7 @@ void linktest_sanitize_string(char *payload, uint8_t size) {
 /******************************************************************************
  * Linktest with P2P
  ******************************************************************************/
-#if LINKTEST_P2P
+#if TESTCONFIG_P2P_MODE
 
 void linktest_init(uint32_t *slotTime) {
   linktest_radio_init();
@@ -48,7 +48,7 @@ void linktest_init(uint32_t *slotTime) {
     .key=TESTCONFIG_KEY,
   };
   uint16_t key_length = 0;
-  key_length = strlen(msg.key)+1;
+  key_length = strlen(msg.key);
   key_length = (key_length > 254) ? 254 : key_length;
   *slotTime = Radio.TimeOnAir(
     RADIOCONFIG_MODULATION,
@@ -114,12 +114,12 @@ void linktest_slot(uint8_t roundIdx, uint16_t slotIdx, uint32_t slotStartTs) {
   }
 }
 
-#endif /* LINKTEST_P2P */
+#endif /* TESTCONFIG_P2P_MODE */
 
 /******************************************************************************
  * Linktest with P2P
  ******************************************************************************/
-#if LINKTEST_FLOOD
+#if TESTCONFIG_FLOOD_MODE
 
 static uint32_t flood_time = 0;
 static linktest_message_t msg_tx = {
@@ -134,7 +134,7 @@ void linktest_init(uint32_t *slotTime) {
   gloria_set_modulation(FLOODCONFIG_MODULATION);
 
   // calc flood and slot time
-  uint16_t key_length = strlen(msg_tx.key)+1;
+  uint16_t key_length = strlen(msg_tx.key);
   key_length = (key_length > 254) ? 254 : key_length;
   payload_len_tx = sizeof(msg_tx.counter) + key_length;
   flood_time = gloria_get_flood_time(payload_len_tx, FLOODCONFIG_N_TX + FLOODCONFIG_NUM_HOPS - 1) / 1000; // gloria_get_flood_time returns us, we need ms
@@ -155,8 +155,8 @@ void linktest_slot(uint8_t roundIdx, uint16_t slotIdx, uint32_t slotStartTs) {
   // no delayed retransmissions (every node is initiator in the corresponding round)
   is_initiator = (TESTCONFIG_NODE_LIST[roundIdx] == NODE_ID);
 #else
-  // delay retransmissions on a single node (the node which corresponds to the current round)
-  if (TESTCONFIG_NODE_LIST[roundIdx] == NODE_ID) {
+  // delay retransmissions on a single node (the node which corresponds to the current round, except initiator)
+  if (TESTCONFIG_NODE_LIST[roundIdx] == NODE_ID && NODE_ID!=FLOODCONFIG_INITIATOR) {
     gloria_set_tx_delay(FLOODCONFIG_DELAY_TX);
   }
   // fixed initiator
@@ -212,7 +212,7 @@ void linktest_print_flood_stats(bool is_initiator, linktest_message_t* msg)
     int16_t  rssi          = -99;
     uint8_t  payload_len   = 0;
     uint8_t  t_ref_updated = 0;
-    uint64_t t_ref         = 0;
+    // uint64_t t_ref         = 0;
 
     if (rx_cnt > 0) {
       rx_idx         = gloria_get_rx_index();
@@ -220,10 +220,12 @@ void linktest_print_flood_stats(bool is_initiator, linktest_message_t* msg)
       rssi           = gloria_get_rssi();
       payload_len    = gloria_get_payload_len();
       t_ref_updated  = gloria_is_t_ref_updated();
-      t_ref          = gloria_get_t_ref();
+      // t_ref          = gloria_get_t_ref();
     }
 
-    linktest_sanitize_string(msg->key, payload_len - sizeof(msg->counter));
+    if (payload_len > sizeof(msg->counter)) {
+      linktest_sanitize_string(msg->key, payload_len - sizeof(msg->counter));
+    }
 
     /* print in json format */
     LOG_INFO("{"
@@ -234,10 +236,10 @@ void linktest_print_flood_stats(bool is_initiator, linktest_message_t* msg)
              "\"rssi\":%d,"
              "\"snr\":%d,"
              "\"payload_len\":%d,"
-             "\"t_ref_updated\":%llu,"
-             "\"t_ref\":%llu,"
+             "\"t_ref_updated\":%d,"
+             // "\"t_ref\":%llu," // requires 64bit printf support (needs to be enabled in IDE Project Properties -> C/C++ Build -> Settings)
              "\"msg_counter\":%u,"
-             "\"msg_key\":%s"
+             "\"msg_key\":\"%s\""
              "}",
       is_initiator,
       rx_cnt,
@@ -247,18 +249,18 @@ void linktest_print_flood_stats(bool is_initiator, linktest_message_t* msg)
       snr,
       payload_len,
       t_ref_updated,
-      t_ref,
+      // t_ref,
       msg->counter,
-      msg->key
+      payload_len > sizeof(msg->counter) ? msg->key : ""
     );
 }
 
-#endif /* LINKTEST_FLOOD */
+#endif /* TESTCONFIG_FLOOD_MODE */
 
 /******************************************************************************
  * Radio Callbacks
  ******************************************************************************/
-#if LINKTEST_P2P
+#if TESTCONFIG_P2P_MODE
 
 void linktest_radio_irq_capture_callback(void) {
   // Execute Radio driver callback
@@ -306,12 +308,12 @@ void linktest_OnRadioRxDone(uint8_t* payload, uint16_t size, int16_t rssi, int8_
   );
 }
 
-#endif /* LINKTEST_P2P */
+#endif /* TESTCONFIG_P2P_MODE */
 
 /******************************************************************************
  * Radio Config Functions
  ******************************************************************************/
-#if LINKTEST_P2P
+#if TESTCONFIG_P2P_MODE
 
   void linktest_radio_init(void) {
     if (RADIO_READ_DIO1_PIN()) {
@@ -425,4 +427,4 @@ void linktest_set_rx_config_fsk(void) {
   );
 }
 
-#endif /* LINKTEST_P2P */
+#endif /* TESTCONFIG_P2P_MODE */

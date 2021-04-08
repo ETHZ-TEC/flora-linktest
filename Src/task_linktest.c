@@ -27,6 +27,8 @@ void vTask_linktest(void const * argument)
   vTaskDelay(pdMS_TO_TICKS(1000));
   LOG_INFO_CONST("linktest task started!");
   LOG_INFO("{\"type\":\"TestConfig\","
+           "\"p2pMode\":%d,"
+           "\"floodMode\":%d,"
            "\"numNodes\":%d,"
            "\"numTx\":%d,"
            "\"setupTime\":%d,"
@@ -34,6 +36,8 @@ void vTask_linktest(void const * argument)
            "\"stopDelay\":%d,"
            "\"txSlack\":%d,"
            "\"key\":\"%s\"}",
+    TESTCONFIG_P2P_MODE,
+    TESTCONFIG_FLOOD_MODE,
     TESTCONFIG_NUM_NODES,
     TESTCONFIG_NUM_SLOTS,
     TESTCONFIG_SETUP_TIME,
@@ -43,26 +47,48 @@ void vTask_linktest(void const * argument)
     TESTCONFIG_KEY
   );
 
-  LOG_INFO("{\"type\":\"RadioConfig\","
-           "\"txPower\":%d,"
-           "\"frequency\":%lu,"
-           "\"modulation\":%d,"
-           "\"datarate\":%d,"
-           "\"bandwidth\":%d,"
-           "\"coderate\":%d,"
-           "\"preamleLength\":%d,"
-           "\"implicitHeader\":%d,"
-           "\"crcOn\":%d}",
-    RADIOCONFIG_TX_POWER,
-    RADIOCONFIG_FREQUENCY,
-    RADIOCONFIG_MODULATION,
-    RADIOCONFIG_DATARATE,
-    RADIOCONFIG_BANDWIDTH,
-    RADIOCONFIG_CODERATE,
-    RADIOCONFIG_PREAMBLE_LEN,
-    RADIOCONFIG_IMPLICIT_HEADER,
-    RADIOCONFIG_CRC_ON
-  );
+  if (TESTCONFIG_P2P_MODE) {
+    LOG_INFO("{\"type\":\"RadioConfig\","
+      "\"txPower\":%d,"
+      "\"frequency\":%lu,"
+      "\"modulation\":%d,"
+      "\"datarate\":%d,"
+      "\"bandwidth\":%d,"
+      "\"coderate\":%d,"
+      "\"preamleLength\":%d,"
+      "\"implicitHeader\":%d,"
+      "\"crcOn\":%d}",
+      RADIOCONFIG_TX_POWER,
+      RADIOCONFIG_FREQUENCY,
+      RADIOCONFIG_MODULATION,
+      RADIOCONFIG_DATARATE,
+      RADIOCONFIG_BANDWIDTH,
+      RADIOCONFIG_CODERATE,
+      RADIOCONFIG_PREAMBLE_LEN,
+      RADIOCONFIG_IMPLICIT_HEADER,
+      RADIOCONFIG_CRC_ON
+    );
+  }
+  if (TESTCONFIG_FLOOD_MODE) {
+    LOG_INFO("{\"type\":\"FloodConfig\","
+      "\"rfBand\":%d,"
+      "\"txPower\":%d,"
+      "\"modulation\":%d,"
+      "\"nTx\":%d,"
+      "\"numHops\":%d,"
+      "\"floodGap\":%d,"
+      "\"delayTx\":%d,"
+      "\"initiator\":%d}",
+      FLOODCONFIG_RF_BAND,
+      FLOODCONFIG_TX_POWER,
+      FLOODCONFIG_MODULATION,
+      FLOODCONFIG_N_TX,
+      FLOODCONFIG_NUM_HOPS,
+      FLOODCONFIG_FLOOD_GAP,
+      FLOODCONFIG_DELAY_TX,
+      FLOODCONFIG_INITIATOR
+    );
+  }
 
 #if !LOG_PRINT_IMMEDIATELY
   log_flush();
@@ -99,17 +125,12 @@ void vTask_linktest(void const * argument)
 
     linktest_round_pre(roundIdx);
 
-    for (slotIdx=0; slotIdx<TESTCONFIG_NUM_SLOTS; slotIdx++) {
-      // wait StartDelay
-      xTmpTs = xLastRoundPeriodStart;
-      vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime + StartDelay));
+    // wait StartDelay
+    xTmpTs = xLastRoundPeriodStart;
+    vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime + StartDelay));
 
-      linktest_slot(roundIdx, slotIdx, SetupTime + StartDelay + (slotIdx+1)*SlotPeriod);
-      // wait, if not last iteration
-      if (slotIdx < (TESTCONFIG_NUM_SLOTS-1)) {
-        xTmpTs = xLastRoundPeriodStart;
-        vTaskDelayUntil(&xTmpTs, pdMS_TO_TICKS(SetupTime + StartDelay + (slotIdx+1)*SlotPeriod));
-      }
+    for (slotIdx=0; slotIdx<TESTCONFIG_NUM_SLOTS; slotIdx++) {
+      linktest_slot(roundIdx, slotIdx, xTmpTs);
 
       // wait, if not last iteration
       if (slotIdx < (TESTCONFIG_NUM_SLOTS-1)) {

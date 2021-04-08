@@ -13,6 +13,10 @@
 #ifndef LINKTEST_H_
 #define LINKTEST_H_
 
+#ifndef FLOODCONFIG_DELAY_TX
+#define FLOODCONFIG_DELAY_TX          0
+#endif /* FLOODCONFIG_DELAY_TX */
+
 typedef struct {
   uint16_t counter;
   char key[254];

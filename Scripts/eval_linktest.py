@@ -72,13 +72,14 @@ def getRows(roundNo, gDf):
 
 for testNo in testNoList:
     print('testNo: {}'.format(testNo))
-    testdir = os.getcwd() + "/{}/serial.csv".format(testNo)
+    testdir = os.getcwd()
+    serialPath = os.path.join(testdir, "{}/serial.csv".format(testNo))
 
     # download test results if directory does not exist
-    if not os.path.isfile(testdir):
+    if not os.path.isfile(serialPath):
         fl.getResults(testNo)
 
-    df = fl.serial2Df(testdir, error='ignore')
+    df = fl.serial2Df(serialPath, error='ignore')
     df.sort_values(by=['timestamp', 'observer_id'], inplace=True, ignore_index=True)
 
     # convert output with valid json to dict and remove other rows

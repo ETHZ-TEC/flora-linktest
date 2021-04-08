@@ -29,8 +29,8 @@
 
 /* Link test configuration ****************************************************/
 // linktest type (selecte exactly one!)
-#define LINKTEST_P2P                    0            // Linktest with point-to-point transmissions
-#define LINKTEST_FLOOD                  1            // Linktest with floods
+#define TESTCONFIG_P2P_MODE         1            // Linktest with point-to-point transmissions
+#define TESTCONFIG_FLOOD_MODE       0            // Linktest with floods
 
 // testconfig (required for all types of linktests)
 #define TESTCONFIG_NUM_NODES            5
@@ -44,19 +44,19 @@
 #define TESTCONFIG_SLOT_GAP             100          // TxSlack [ms]
 #define TESTCONFIG_KEY                  "deadbeef"   // payload of RF packets (no special characters!)
 
-// flood config (required only for LINKTEST_FLOOD)
+// flood config (required only for TESTCONFIG_FLOOD_MODE)
 #define FLOODCONFIG_RF_BAND             46           // frequency band index as defined in radio_constants.c
-#define FLOODCONFIG_TX_POWER            0            // transmit power [dBm] (valid range: -9...+22)
+#define FLOODCONFIG_TX_POWER            -5           // transmit power [dBm] (valid range: -9...+22)
 #define FLOODCONFIG_MODULATION          10           // flora modulation index as defined in radio_constants.c
 #define FLOODCONFIG_N_TX                2            // number of (re)transmissions
 #define FLOODCONFIG_NUM_HOPS            6            // number of hopts (should match network diameter in hops)
-#define FLOODCONFIG_FLOOD_GAP           100          // safety margin (in ms) before and after the initiator performs the flood
-#define FLOODCONFIG_DELAY_TX            0            // delay retransmissions
+#define FLOODCONFIG_FLOOD_GAP           20           // safety margin (in ms) before and after the initiator performs the flood
+#define FLOODCONFIG_DELAY_TX            1            // delay retransmissions
                                                      //   n=0: no node delays anything; in different rounds, different nodes initiate flood;
                                                      //   n!=0: in different rounds, different nodes delay retransmission by n hops (single fixed initiator for all rounds)
 #define FLOODCONFIG_INITIATOR           2            // node ID of flood initiator (has an effect only if FLOODCONFIG_DELAY_TX!=0)
 
-// radio config (required only for LINKTEST_P2P)
+// radio config (required only for TESTCONFIG_P2P_MODE)
 // /* mod5 (SF7) */
 // #define RADIOCONFIG_TX_POWER            14           // transmit power [dBm] (valid range: -9...+22)
 // #define RADIOCONFIG_FREQUENCY           865440000    // center frequency [Hz]
