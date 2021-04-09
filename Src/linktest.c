@@ -35,7 +35,7 @@ void linktest_sanitize_string(char *payload, uint8_t size) {
 }
 
 /******************************************************************************
- * Linktest with P2P
+ * Linktest with point-to-point (P2P) transmissions
  ******************************************************************************/
 #if TESTCONFIG_P2P_MODE
 
@@ -117,7 +117,7 @@ void linktest_slot(uint8_t roundIdx, uint16_t slotIdx, uint32_t slotStartTs) {
 #endif /* TESTCONFIG_P2P_MODE */
 
 /******************************************************************************
- * Linktest with P2P
+ * Linktest with flood transmissions
  ******************************************************************************/
 #if TESTCONFIG_FLOOD_MODE
 
@@ -229,6 +229,7 @@ void linktest_print_flood_stats(bool is_initiator, linktest_message_t* msg)
 
     /* print in json format */
     LOG_INFO("{"
+             "\"type\":\"FloodDone\","
              "\"is_initiator\":%d,"
              "\"rx_cnt\":%d,"
              "\"rx_idx\":%d,"
