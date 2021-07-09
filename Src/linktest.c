@@ -165,8 +165,7 @@ void linktest_set_rx_config_lora(void) {
     RADIOCONFIG_CRC_ON,          // crcOn
     false,                       // FreqHopOn
     0,                           // HopPeriod
-    false,                       // iqInverted
-    true                         // rxContinuous
+    false                        // iqInverted
   );
 }
 
@@ -199,7 +198,7 @@ void linktest_set_tx_config_fsk(void) {
 void linktest_set_rx_config_fsk(void) {
   // determine fdev from bandwidth and datarate
   // NOTE: according to the datasheet afc_bandwidth (automated frequency control bandwidth) variable represents the frequency error (2x crystal frequency error)
-  uint32_t afc_bandwidth = 2 * (RADIOCONFIG_BANDWIDTH / 2 + RADIOCONFIG_FREQUENCY) / RADIO_CLOCK_DRIFT;
+  uint32_t afc_bandwidth = 2 * (RADIOCONFIG_BANDWIDTH / 2 + RADIOCONFIG_FREQUENCY) / (1000000 / RADIO_CLOCK_DRIFT_PPM);
   int32_t  bandwidth_rx  = RADIOCONFIG_BANDWIDTH + afc_bandwidth; // for rx only
 
   Radio.Standby();
@@ -218,7 +217,6 @@ void linktest_set_rx_config_fsk(void) {
     RADIOCONFIG_CRC_ON,       // crcOn
     false,                    // FreqHopOn
     0,                        // HopPeriod
-    false,                    // iqInverted
-    true                      // rxContinuous
+    false                     // iqInverted
   );
 }

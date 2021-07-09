@@ -115,8 +115,8 @@ void vTask_linktest(void const * argument)
   if (RADIOCONFIG_MODULATION == MODEM_FSK) {
     linktest_set_tx_config_fsk();
     Radio.Standby();
-    Radio.Send((uint8_t*) &msg, sizeof(msg.counter) + key_length);
-    // Radio.Send((uint8_t*) &msg, 0);
+    Radio.SendPayload((uint8_t*) &msg, sizeof(msg.counter) + key_length);
+    // Radio.SendPayload((uint8_t*) &msg, 0);
   }
 
   /* wait for sync signal */
@@ -167,7 +167,7 @@ void vTask_linktest(void const * argument)
         msg.counter = txIdx;
         key_length  = strlen(msg.key);
         key_length  = (key_length > 254) ? 254 : key_length;
-        Radio.Send((uint8_t*) &msg, sizeof(msg.counter) + key_length);
+        Radio.SendPayload((uint8_t*) &msg, sizeof(msg.counter) + key_length);
 
         // wait, if not last iteration
         if (txIdx < (TESTCONFIG_NUM_TX-1)) {
@@ -194,7 +194,7 @@ void vTask_linktest(void const * argument)
       LOG_INFO("{\"type\":\"StartOfRound\",\"node\":%d}", TESTCONFIG_NODE_LIST[nodeIdx]);
 
       // start rx mode (with deactivated preamble IRQs)
-      Radio.RxBoostedMask(LINKTEST_IRQ_MASK);
+      Radio.RxBoostedMask(LINKTEST_IRQ_MASK, 0, true, false);
       // LOG_INFO("RxBoostedMask executed");
 
       // wait

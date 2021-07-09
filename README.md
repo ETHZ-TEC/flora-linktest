@@ -1,8 +1,9 @@
 # Linktest
+
 Point-to-point link test for running on FlockLab 2 (measures packet reception ratio, RSSI, and CRC errors).
 
 ## Initial Checkout and Compile of the Project
-* See [instructions](https://gitlab.ethz.ch/tec/research/dpp/wiki/-/wikis/flora/home#clone-compile-run) for flora apps
+* See [instructions](https://gitlab.ethz.ch/tec/public/flora/wiki#clone-compile-run) for flora apps
 
 ## Running a Test
 1. Set the `TESTCONFIG_xxx` and `RADIOCONFIG_xxx` configuration parameters. (in `app_config.h`)  
