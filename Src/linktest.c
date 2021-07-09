@@ -74,12 +74,12 @@ void linktest_init(uint32_t *slotTime) {
 void linktest_round_pre(uint8_t roundIdx) {
   // set radio config (fixed for entire round)
   if (RADIOCONFIG_MODULATION == MODEM_LORA) {
-   linktest_set_tx_config_lora();
-   linktest_set_rx_config_lora();
+    linktest_set_tx_config_lora();
+    linktest_set_rx_config_lora();
   }
   else {
-   linktest_set_tx_config_fsk();
-   linktest_set_rx_config_fsk();
+    linktest_set_tx_config_fsk();
+    linktest_set_rx_config_fsk();
   }
   Radio.Standby();
 

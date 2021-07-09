@@ -297,9 +297,10 @@ def extractFloodDelayedTx(dfd, testConfig, floodConfig):
             floodRxList = [elem for elem in rows if (elem['type']=='FloodDone' and elem['rx_cnt']>0 and elem['is_initiator']==0)]
             numFloodsRx = len(floodRxList)
             # fill matrix
+            # hop distance = rx_idx + 1
             numFloodsRxMatrix[delayedNodeIdx][rxNodeIdx] = len(floodRxList)
-            hopDistanceMatrix[delayedNodeIdx][rxNodeIdx] = np.mean([elem['rx_idx'] for elem in floodRxList]) if len(floodRxList) else np.nan
-            hopDistanceStdMatrix[delayedNodeIdx][rxNodeIdx] = np.std([elem['rx_idx'] for elem in floodRxList]) if len(floodRxList) else np.nan
+            hopDistanceMatrix[delayedNodeIdx][rxNodeIdx] = np.mean([elem['rx_idx']+1 for elem in floodRxList]) if len(floodRxList) else np.nan
+            hopDistanceStdMatrix[delayedNodeIdx][rxNodeIdx] = np.std([elem['rx_idx']+1 for elem in floodRxList]) if len(floodRxList) else np.nan
 
     return numFloodsRxMatrix, hopDistanceMatrix, hopDistanceStdMatrix
 
