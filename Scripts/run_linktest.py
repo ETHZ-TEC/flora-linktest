@@ -23,8 +23,8 @@ fl = Flocklab()
 from sx1262.sx1262 import LoraConfig, FskConfig, getGloriaFloodDuration
 
 ###############################################################################
-obsNormal = []   # will be read from config if empty  # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
-obsHg     = []   # [15, 17, 25, 30]
+obsNormal = []   # will be read from config if empty
+obsHg     = []   # (not used)
 
 cwd = os.path.dirname(os.path.realpath(__file__))
 xmlPath = os.path.join(cwd, 'flocklab_linktest.xml')
@@ -195,7 +195,7 @@ def create_test():
 
     # read info from config/header files
     custom = dict()
-    for var in ['FLOCKLAB', 'FLOCKLAB_SWD', 'SWO_ENABLE']:
+    for var in ['FLOCKLAB', 'FLOCKLAB_SWD', 'SWO_ENABLE', 'LOG_USE_DMA', 'TESTCONFIG_P2P_MODE', 'TESTCONFIG_FLOOD_MODE']:
         custom[var] = readConfig(var)
     custom['HOST_ID'] = readConfig('HOST_ID')
     custom['git_hashes'] = {
@@ -244,6 +244,7 @@ def create_test():
     serial = SerialConf()
     serial.obsIds = obsNormal + obsHg
     serial.baudrate = '115200'
+    # serial.remoteIp = '0.0.0.0' # activates Python serial logger (instead of C serial logger) if uncommented
     fc.configList.append(serial)
 
     gpioTracingConf = GpioTracingConf()
