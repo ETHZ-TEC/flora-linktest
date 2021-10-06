@@ -139,5 +139,10 @@
 #define RADIO_RX_START_IND()            FLOCKLAB_PIN_SET(FLOCKLAB_LED3);
 #define RADIO_RX_STOP_IND()             FLOCKLAB_PIN_CLR(FLOCKLAB_LED3);
 
+/* parameter checks ***********************************************************/
+#if TESTCONFIG_P2P_MODE && TESTCONFIG_FLOOD_MODE
+#error "cannot run test with TESTCONFIG_P2P_MODE and TESTCONFIG_FLOOD_MODE at the same time"
+#endif
+
 
 #endif /* CONFIG_H_ */
