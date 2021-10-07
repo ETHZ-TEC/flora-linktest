@@ -47,7 +47,7 @@ from flocklab import Flocklab
 from flocklab import *
 fl = Flocklab()
 
-# Requires sx1262 library (https://gitlab.ethz.ch/tec/research/dpp/software/communication_platforms/sx126x_lora/sx1262)
+# Requires sx1262 library (https://gitlab.ethz.ch/tec/public/flora/sx1262)
 from sx1262.sx1262 import LoraConfig, FskConfig, getGloriaFloodDuration
 
 ###############################################################################
