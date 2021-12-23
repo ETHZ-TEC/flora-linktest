@@ -221,14 +221,17 @@ def extractData(testNo, testDir):
         'testConfig': testConfig,
         'nodeList': nodeList,
     }
-    if testConfig['p2pMode'] and not testConfig['floodMode']:
+    if testConfig['p2pMode'] and (not testConfig['floodMode']):
         pathlossMatrix, prrMatrix, crcErrorMatrix = extractP2pStats(dfd, testConfig, radioConfig)
         d['radioConfig'] = radioConfig
         d['prrMatrix'] = prrMatrix
         d['crcErrorMatrix'] = crcErrorMatrix
         d['pathlossMatrix'] = pathlossMatrix
-    elif testConfig['floodMode'] and not testConfig['p2pMode']:
-        numFloodsRxMatrix, hopDistanceMatrix, hopDistanceStdMatrix = extractFloodStats(dfd, testConfig, floodConfig)
+    elif testConfig['floodMode'] and (not testConfig['p2pMode']):
+        if floodConfig['delayTx'] == 0:
+            numFloodsRxMatrix, hopDistanceMatrix, hopDistanceStdMatrix = extractFloodNormal(dfd, testConfig, floodConfig)
+        else: # floods with delayed Tx
+            numFloodsRxMatrix, hopDistanceMatrix, hopDistanceStdMatrix = extractFloodDelayedTx(dfd, testConfig, floodConfig)
         d['floodConfig'] = floodConfig
         d['numFloodsRxMatrix'] = numFloodsRxMatrix
         d['hopDistanceMatrix'] = hopDistanceMatrix
@@ -294,16 +297,29 @@ def extractP2pStats(dfd, testConfig, radioConfig):
     return pathlossMatrix, prrMatrix, crcErrorMatrix
 
 
-def extractFloodStats(dfd, testConfig, floodConfig):
-    if floodConfig['delayTx'] == 0:
-        extractFloodNormal(dfd, testConfig, floodConfig)
-    else:
-        numFloodsRxMatrix, hopDistanceMatrix, hopDistanceStdMatrix = extractFloodDelayedTx(dfd, testConfig, floodConfig)
-    return numFloodsRxMatrix, hopDistanceMatrix, hopDistanceStdMatrix
-
-
 def extractFloodNormal(dfd, testConfig, floodConfig):
-    raise Exception('Not yet implemented')
+    groups = dfd.groupby('observer_id')
+    nodeList = sorted(dfd.observer_id.unique())
+    numNodes = len(nodeList)
+    numFloodsRxMatrix = np.empty( (numNodes, numNodes,) ) * np.nan
+    hopDistanceMatrix = np.empty( (numNodes, numNodes,) ) * np.nan
+    hopDistanceStdMatrix = np.empty( (numNodes, numNodes,) ) * np.nan
+
+    # iterate over rounds
+    for nodeOfRound in nodeList:
+        txNode = nodeOfRound
+        txNodeIdx = nodeList.index(txNode)
+        # iterate over nodes
+        for rxNode in nodeList:
+            rxNodeIdx = nodeList.index(rxNode)
+            rows = getRows(txNode, groups.get_group(rxNode))
+            floodRxList = [elem for elem in rows if (elem['type']=='FloodDone' and elem['rx_cnt']>0 and elem['is_initiator']==0)]
+            # fill matrix
+            numFloodsRxMatrix[txNodeIdx][rxNodeIdx] = len(floodRxList)
+            hopDistanceMatrix[txNodeIdx][rxNodeIdx] = np.mean([elem['rx_idx']+1 for elem in floodRxList]) if len(floodRxList) else np.nan
+            hopDistanceStdMatrix[txNodeIdx][rxNodeIdx] = np.std([elem['rx_idx']+1 for elem in floodRxList]) if len(floodRxList) else np.nan
+
+    return numFloodsRxMatrix, hopDistanceMatrix, hopDistanceStdMatrix
 
 
 def extractFloodDelayedTx(dfd, testConfig, floodConfig):
@@ -319,11 +335,10 @@ def extractFloodDelayedTx(dfd, testConfig, floodConfig):
         delayedNode = nodeOfRound
         delayedNodeIdx = nodeList.index(delayedNode)
         # iterate over nodes
-        for node in nodeList:
-            rxNodeIdx = nodeList.index(node)
-            rows = getRows(delayedNode, groups.get_group(node))
+        for rxNode in nodeList:
+            rxNodeIdx = nodeList.index(rxNode)
+            rows = getRows(delayedNode, groups.get_group(rxNode))
             floodRxList = [elem for elem in rows if (elem['type']=='FloodDone' and elem['rx_cnt']>0 and elem['is_initiator']==0)]
-            numFloodsRx = len(floodRxList)
             # fill matrix
             # hop distance = rx_idx + 1
             numFloodsRxMatrix[delayedNodeIdx][rxNodeIdx] = len(floodRxList)
@@ -400,7 +415,37 @@ def saveP2pMatricesToHtml(extractionDict):
        fp.write(h.render())
 
 
-def saveFloodMatricesToHtml(extractionDict):
+def saveFloodNormalMatricesToHtml(extractionDict):
+    nodeList = extractionDict['nodeList']
+    initiator = extractionDict['floodConfig']['initiator']
+
+    numFloodsRxMatrixDf = pd.DataFrame(data=extractionDict['numFloodsRxMatrix'], index=nodeList, columns=nodeList)
+    hopDistanceMatrixDf = pd.DataFrame(data=extractionDict['hopDistanceMatrix'], index=nodeList, columns=nodeList)
+    hopDistanceStdMatrixDf = pd.DataFrame(data=extractionDict['hopDistanceStdMatrix'], index=nodeList, columns=nodeList)
+    configHtml = 'testConfig:<br />{}<br /><br />floodConfig:<br />{}'.format(extractionDict['testConfig'], extractionDict['floodConfig'])
+
+    saveMatricesToHtml(
+        matrixDfList=(
+            hopDistanceMatrixDf,
+            numFloodsRxMatrixDf,
+            hopDistanceStdMatrixDf,
+            configHtml,
+        ),
+        titles=(
+            'Hop distance (Tx node -> Rx node)'.format(initiator),
+            'Number of received floods (Tx node -> Rx node)',
+            'Stddev of hop distance',
+            'Config',
+        ),
+        cmaps=('inferno_r', 'YlGnBu', 'YlGnBu', None),
+        formats=('{:.1f}', '{:.0f}', '{:.1f}', None),
+        applymaps=[lambda x: 'background: white' if pd.isnull(x) else '']*3 + [None],
+        outputDir=outputDir,
+        filename='{}.html'.format(testNo)
+    )
+
+
+def saveFloodDelayedTxMatricesToHtml(extractionDict):
     nodeList = extractionDict['nodeList']
     initiator = extractionDict['floodConfig']['initiator']
 
@@ -411,24 +456,28 @@ def saveFloodMatricesToHtml(extractionDict):
         func=lambda col: col - col[initiator],
         axis=0
     )
+    configHtml = 'testConfig:<br />{}<br /><br />floodConfig:<br />{}'.format(extractionDict['testConfig'], extractionDict['floodConfig'])
 
-    matrixDfList = [
-        hopDistanceMatrixDf,
-        numFloodsRxMatrixDf,
-        hopDistanceDiffMatrixDf,
-        hopDistanceStdMatrixDf,
-    ]
     saveMatricesToHtml(
-        matrixDfList=matrixDfList,
+        matrixDfList=(
+            hopDistanceMatrixDf,
+            numFloodsRxMatrixDf,
+            hopDistanceDiffMatrixDf,
+            hopDistanceStdMatrixDf,
+            configHtml,
+            '',
+        ),
         titles=(
             'Hop distance (delayed node -> Rx node, initiator={})'.format(initiator),
             'Number of received floods',
             'Hop distance diff (delayed node -> Rx node, initiator={})'.format(initiator),
             'Stddev of hop distance',
+            'Config',
+            '',
         ),
-        cmaps=('inferno_r', 'YlGnBu', 'inferno_r', 'YlGnBu'),
-        formats=('{:.1f}', '{:.0f}', '{:.1f}', '{:.1f}'),
-        applymaps=[lambda x: 'background: white' if pd.isnull(x) else '']*4,
+        cmaps=('inferno_r', 'YlGnBu', 'inferno_r', 'YlGnBu', None, None),
+        formats=('{:.1f}', '{:.0f}', '{:.1f}', '{:.1f}', None, None),
+        applymaps=[lambda x: 'background: white' if pd.isnull(x) else '']*4 + [None, None],
         outputDir=outputDir,
         filename='{}.html'.format(testNo)
     )
@@ -450,26 +499,27 @@ def saveMatricesToHtml(matrixDfList, filename, titles, cmaps, formats, applymaps
     with h.add(body()).add(div(id='content')):
         with table(cls="outer").add(tbody()):
             for i in range(int(numMatrices/2)):
-                html0 = styleDf(
-                    df=matrixDfList[2*i],
-                    cmap=cmaps[2*i],
-                    format=formats[2*i],
-                    applymap=applymaps[2*i],
-                )
-                html1 = styleDf(
-                    df=matrixDfList[2*i+1],
-                    cmap=cmaps[2*i+1],
-                    format=formats[2*i+1],
-                    applymap=applymaps[2*i+1],
-                )
+                htmlTile = {}
+                for idx in [2*i, 2*i+1]:
+                    if isinstance(matrixDfList[idx], pd.DataFrame):
+                        htmlTile[idx] = styleDf(
+                            df=matrixDfList[idx],
+                            cmap=cmaps[idx],
+                            format=formats[idx],
+                            applymap=applymaps[idx],
+                        )
+                    elif type(matrixDfList[idx]) == str:
+                        htmlTile[idx] = matrixDfList[idx]
+                    else:
+                        raise Exception('Unknown data type \'{}\' for matrix tile with title \'{}\''.format(type(matrixDfList[idx])), titles[idx])
                 with tr(cls="outer"):
                     th(titles[2*i], cls='outer')
                     th(cls="outer")
                     th(titles[2*i+1], cls='outer')
                 with tr(cls='outer'):
-                    td(raw(html0), cls='outer')
+                    td(raw(htmlTile[2*i]), cls='outer')
                     td(cls="outer")
-                    td(raw(html1), cls='outer')
+                    td(raw(htmlTile[2*i+1]), cls='outer')
 
     htmlPath = os.path.join(outputDir, filename)
     os.makedirs(os.path.split(htmlPath)[0], exist_ok=True)
@@ -495,4 +545,7 @@ if __name__ == "__main__":
         if 'radioConfig' in d:
             saveP2pMatricesToHtml(d)
         elif 'floodConfig' in d:
-            saveFloodMatricesToHtml(d)
+            if d['floodConfig']['delayTx'] == 0:
+                saveFloodNormalMatricesToHtml(d)
+            else:
+                saveFloodDelayedTxMatricesToHtml(d)
